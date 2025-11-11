@@ -2,8 +2,8 @@ import { Key, Mail, User } from "lucide-react";
 import React, { useState } from "react";
 import {createUserWithEmailAndPassword, signInWithPopup} from "firebase/auth"
 import {db,auth,googleProvider} from "../firebase";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
-
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import {Link} from "react-router-dom";
 
 const Signup = () => {
 
@@ -45,9 +45,38 @@ const Signup = () => {
     alert("Error Happened, Please try after some time")
     
    }
+  }
 
+  const  handleGoogle = async()=>{
 
+    try{
 
+      const data = await signInWithPopup(auth,googleProvider);
+
+      console.log(data);
+      const user = data.user;
+
+      const ref = doc(db, "user", user.uid);
+
+      const already = await getDoc(ref);
+
+      if(!already.exists)
+      {
+          await setDoc(ref,{
+              name: user.displayName,
+              email:user.email,
+              uid:user.uid,
+              createdAt:serverTimestamp()
+          })
+      }
+      alert("Google signup successful");
+            
+    }
+    catch(err)
+    {
+      console.error("Error happened",err.message);
+      
+    }
   }
 
   return (
@@ -114,8 +143,17 @@ const Signup = () => {
         </form>
 
           <button
-          className="px-4 py-2 bg-blue-500 rounded-lg font-semibold text-lg shadow-lg w-full mt-6 hover:bg-blue-400">Signup with Google</button>
+          className="px-4 py-2 bg-gray-100 rounded-lg font-semibold text-lg shadow-lg w-full mt-6 hover:bg-gray-50" onClick={handleGoogle}>Signup with Google</button>
+      
+         <p className="text-center text-md mt-8">
+        Already have an account?{" "}
+       <Link to="/login"
+       className="text-blue-500 text-semibold hover:text-blue-500">
+        Login
+       </Link>
+      </p>
       </div>
+         
     </div>
   );
 };
